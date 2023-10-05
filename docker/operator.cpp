@@ -13,10 +13,10 @@
 // PKCS#12
 #include <libcryptosec/Pkcs12Builder.h>
 
-Certificate *Operator::generateCertificate()
+Certificate *Operator::generateCertificate(PublicKey *publicKey)
 {
-    CertificateBuilder builder;                    // Instancia um objeto CertificateBuilder
-    builder.setPublicKey(*keyPair.getPublicKey()); // Define a chave pública do operador como a chave pública do objeto RSAKeyPair
+    CertificateBuilder builder;       // Instancia um objeto CertificateBuilder
+    builder.setPublicKey(*publicKey); // Define a chave pública do certificado
 
     // Para fins de simulação, as informações do sujeito (excluindo o nome comum) são padrões
     RDNSequence subject;
@@ -49,16 +49,39 @@ Certificate *Operator::generateCertificate()
     builder.setSerialNumber(serialNumber);
 
     // Cria o certificado
-    Certificate *certificate = builder.sign(*keyPair.getPrivateKey(), MessageDigest::SHA256);
+    Certificate *certificate = builder.sign(*privateKey, MessageDigest::SHA256); // Assina o certificado com a chave privada do operador
     return certificate;
 }
 
-Operator::Operator(const std::string &name) : name(name), password("123456"), keyPair(2048)
+Operator::Operator(const std::string &name) : name(name), password("123456")
 {
+    // Gera um par de chaves RSA de 2048 bits
+    RSAKeyPair keyPair(2048);
+    privateKey = keyPair.getPrivateKey();
+
     // Gera o certificado do operador a partir da chave pública
-    certificate = generateCertificate();
+    certificate = generateCertificate(keyPair.getPublicKey());
     std::cout << "Operador " << name << " criado com sucesso." << std::endl; // DEBUG
 };
+
+Operator::Operator(Pkcs12 *pkcs12, std::string password) : password(password)
+{
+    // Obtém a chave privada e o certificado do pacote Pkcs12
+    try
+    {
+        privateKey = pkcs12->getPrivKey(password);
+        certificate = pkcs12->getCertificate(password);
+    }
+    catch (Pkcs12Exception &e)
+    {
+        std::cout << "Erro ao obter a chave privada do pacote Pkcs12 (a senha fornecida pode estar incorreta)." << std::endl;
+        std::cout << e.what() << std::endl;
+        exit(1);
+    }
+
+    name = certificate->getSubject().getEntries(RDNSequence::COMMON_NAME)[0];
+    std::cout << "Operador " << name << " criado com sucesso." << std::endl; // DEBUG
+}
 
 Operator::~Operator()
 {
@@ -73,7 +96,7 @@ std::string Operator::getName() const
 PublicKey *Operator::getPublicKey()
 {
     // Extrai a chave pública do objeto RSAKeyPair
-    return keyPair.getPublicKey();
+    return certificate->getPublicKey();
 }
 
 Certificate *Operator::getCertificate()
@@ -84,12 +107,12 @@ Certificate *Operator::getCertificate()
 ByteArray *Operator::getPkcs12DerEncoded()
 {
     Pkcs12Builder builder;
-    builder.setKeyAndCertificate(keyPair.getPrivateKey(), certificate, name); // Alteração aqui
+    builder.setKeyAndCertificate(privateKey, certificate, name); // Alteração aqui
     Pkcs12 *pkcs12 = builder.doFinal(password);
     return new ByteArray(pkcs12->getDerEncoded());
 }
 
 PrivateKey *Operator::getPrivateKey()
 {
-    return keyPair.getPrivateKey();
+    return privateKey;
 }

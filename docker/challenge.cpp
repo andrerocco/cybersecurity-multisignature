@@ -18,6 +18,8 @@ void generateFile(ByteArray &ba, std::string filename)
 
 int main(int argc, char *argv[])
 {
+	OpenSSL_add_all_algorithms();
+
 	Operator op1("Teste");
 	ByteArray *ba1 = op1.getPkcs12DerEncoded();
 
@@ -47,4 +49,8 @@ int main(int argc, char *argv[])
 		std::cout << "OK" << std::endl;
 	else
 		std::cout << "FAIL" << std::endl;
+
+	// Cria um novo operador a partir do pacote lido
+	std::string password = "123456";
+	Operator op2(op1Pkcs12, password);
 }
