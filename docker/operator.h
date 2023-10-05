@@ -36,7 +36,7 @@ public:
     Operator(const std::string &name);
 
     /**
-     * Construtor alternativo para criar um operador a partir de uma chave privada e um certificado.
+     * Construtor que gera o operador a partir um pacote Pkcs12 (contendo a chave privada e o certificado do operador).
      * @param pckcs12 Objeto Pkcs12 contendo a chave privada e o certificado do operador.
      * @param password Senha de acesso ao pacote Pkcs12.
      */
@@ -46,6 +46,12 @@ public:
      * Destrutor.
      */
     ~Operator();
+
+    /**
+     * Assina um pacote Pkcs7.
+     * @param builder Endereço do objeto Pkcs7SignedDataBuilder o qual o operador irá assinar.
+     */
+    void signPkcs7(Pkcs7SignedDataBuilder &builder);
 
     /**
      * @return Nome do operador.
@@ -63,16 +69,11 @@ public:
     Certificate *getCertificate();
 
     /**
-     * @return
+     * @return Pacote Pkcs12 gerado a partir da chave privada, certificado e senha do operador.
      */
     ByteArray *getPkcs12DerEncoded();
 
-    PrivateKey *getPrivateKey();
-
-    /**
-     * @param Pkcs7Builder Objeto Pkcs7SignerBuilder o qual o operador irá assinar.
-     */
-    // void sign(Pkcs7SignerBuilder &builder);
+    PrivateKey *getPrivateKey(); // TODO - Remove
 };
 
 #endif // OPERATOR_H

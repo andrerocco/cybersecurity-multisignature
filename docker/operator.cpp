@@ -88,6 +88,11 @@ Operator::~Operator()
     delete certificate;
 }
 
+void Operator::signPkcs7(Pkcs7SignedDataBuilder &builder)
+{
+    // builder.addSigner(MessageDigest::SHA256, *certificate, *privateKey);
+}
+
 std::string Operator::getName() const
 {
     return name;
