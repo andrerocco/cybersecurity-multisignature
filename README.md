@@ -2,7 +2,7 @@
 
 Hello there!
 
-The campaign for this selection was inspired by the Mission Impossible movies. The character we presented on our banner is called Luther Stickell. 
+The campaign for this selection was inspired by the Mission Impossible movies. The character we presented on our banner is called Luther Stickell.
 
 "He is a senior intelligence operative and computer specialist employed by the Impossible Mission Force and a close friend to Ethan Hunt who joined his team as a disavowed agent during a mission in 1996 and has since returned in all his following missions."
 
@@ -16,47 +16,46 @@ Don't worry, we've prepared some links for you to read.
 
 In addition, Let's look at the main commands you need to run a pre-booted environment.
 
-* [Docker Docs](https://docker-curriculum.com/)
+-   [Docker Docs](https://docker-curriculum.com/)
 
 ### Docker Quickstart
 
-* Installing Docker (Ubuntu):
-  * `sudo apt update`
-  * `sudo apt install docker` (you can also install it with: `sudo snap install docker`)
+-   Installing Docker (Ubuntu):
 
-* Starting Docker:
-  * `sudo systemctl start docker`
-  * `sudo systemctl enable docker`
-  
-* Verify installation
-  * `docker --version`
-  * `docker run hello-world`
+    -   `sudo apt update`
+    -   `sudo apt install docker` (you can also install it with: `sudo snap install docker`)
 
-* Running our container for the first time: 
-  * Download the `docker` folder in this repository
-  * `cd docker/`
-  * `docker build -t sgc .`
-  * `docker run --name sgc -ti sgc` or `docker run -ti --name sgc -v ./:/home/labsec/challenge sgc bash`
-  
-* Running the container afterwards:
-  * `docker start sgc`
-  * `z`
+-   Starting Docker:
+    -   `sudo systemctl start docker`
+    -   `sudo systemctl enable docker`
+-   Verify installation
+
+    -   `docker --version`
+    -   `docker run hello-world`
+
+-   Running our container for the first time:
+    -   Download the `docker` folder in this repository
+    -   `cd docker/`
+    -   `docker build -t sgc .`
+    -   `docker run --name sgc -ti sgc` or `docker run -ti --name sgc -v ./:/home/labsec/challenge sgc bash`
+-   Running the container afterwards:
+    -   `docker start sgc`
+    -   `docker exec -ti sgc /bin/bash`
 
 ## Libcryptosec
 
-* [Libcryptosec Docs](https://labsec.github.io/libcryptosec/)
-* [Source Repository](https://github.com/LabSEC/libcryptosec)
+-   [Libcryptosec Docs](https://labsec.github.io/libcryptosec/)
+-   [Source Repository](https://github.com/LabSEC/libcryptosec)
 
 ## OpenSSL
 
-* [OpenSSL Docs](https://www.openssl.org/docs/man1.0.2/)	
+-   [OpenSSL Docs](https://www.openssl.org/docs/man1.0.2/)
 
 ## Helpful Knowledge & Tools
 
-* [Understanding Makefiles](https://www.gnu.org/software/make/manual/html_node/Introduction.html)
-* [GCC Compiling/Linking](https://www3.ntu.edu.sg/home/ehchua/programming/cpp/gcc_make.html)
-* [GDB debugging with examples](https://www.cprogramming.com/gdb.html)
-
+-   [Understanding Makefiles](https://www.gnu.org/software/make/manual/html_node/Introduction.html)
+-   [GCC Compiling/Linking](https://www3.ntu.edu.sg/home/ehchua/programming/cpp/gcc_make.html)
+-   [GDB debugging with examples](https://www.cprogramming.com/gdb.html)
 
 ### GDB Cheatsheet
 
