@@ -4,8 +4,11 @@
 #include <iostream>
 #include <string>
 
-#include <libcryptosec/RSAKeyPair.h>
+#include "CertificateAuthority.h"
+#include <libcryptosec/PrivateKey.h>
+#include <libcryptosec/PublicKey.h>
 #include <libcryptosec/certificate/Certificate.h>
+#include <libcryptosec/Pkcs7SignedDataBuilder.h>
 #include <libcryptosec/Pkcs12.h>
 
 /**
@@ -20,6 +23,8 @@ private:
     std::string password;
     //! Chave privada do operador.
     PrivateKey *privateKey;
+    //! Chave pública do operador.
+    PublicKey *publicKey;
     //! Certificado identifica o operador (contém a chave pública e informações sobre o operador)
     Certificate *certificate;
 
@@ -32,8 +37,9 @@ public:
     /**
      * Construtor padrão que gerará um par de chaves RSA de 2048 bits e um certificado para o operador.
      * @param name Nome do operador.
+     * @param ca Referência para a autoridade certificadora que irá emitir o certificado do operador.
      */
-    Operator(const std::string &name);
+    Operator(std::string name, CertificateAuthority *ca);
 
     /**
      * Construtor que gera o operador a partir um pacote Pkcs12 (contendo a chave privada e o certificado do operador).
@@ -48,10 +54,26 @@ public:
     ~Operator();
 
     /**
+     * Assina um hash com a chave privada do operador.
+     * @param hash Hash a ser assinado.
+     * @return ByteArray contendo a assinatura.
+     */
+    ByteArray sign(ByteArray &hash);
+
+    /**
+     * Constroi um pacote Pkcs7 e o inicializa com as informações do operador. Método normalmente utilizado para iniciar
+     * a construção de um pacote Pkcs7 para posteriormente ser assinado por outros operadores.
+     * @return Pkcs7SignedDataBuilder
+     * @param attached Se true, o conteúdo do pacote estará contido no mesmo, caso contrário apenas a assinatura do conteúdo estará presente.
+     * @see Pckcs7SignedDataBuilder
+     */
+    // Pkcs7SignedDataBuilder *generatePkcs7(bool attached); // TODO - Remove
+
+    /**
      * Assina um pacote Pkcs7.
      * @param builder Endereço do objeto Pkcs7SignedDataBuilder o qual o operador irá assinar.
      */
-    void signPkcs7(Pkcs7SignedDataBuilder &builder);
+    // void signPkcs7(Pkcs7SignedDataBuilder &builder); // TODO - Remove
 
     /**
      * @return Nome do operador.
