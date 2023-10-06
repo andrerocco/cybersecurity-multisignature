@@ -75,7 +75,7 @@ void MultiSignature::addSignature(Operator *op)
     signatures.insert(std::make_pair(op->getName(), signature));
 }
 
-bool MultiSignature::verify(std::vector<Operator *> toVerify, ByteArray &hash, bool checkContainsAll)
+bool MultiSignature::verify(std::vector<Operator *> toVerify, ByteArray &hash, CertificateAuthority *ca, bool checkContainsAll)
 {
     std::size_t toVerifyAmount = toVerify.size();
     std::size_t countVerified = 0;
@@ -88,9 +88,8 @@ bool MultiSignature::verify(std::vector<Operator *> toVerify, ByteArray &hash, b
         {
             // Verifica a assinatura com a chave pública do operador fornecido
             bool verify = Signer::verify(*toVerify[i]->getPublicKey(), it->second, hash, MessageDigest::SHA256);
-            // Valida o certificado do operador com CA
-            // bool verifyCertificate = toVerify[i]->getCertificate()->verify(*ca->getCertificate());
-            if (!verify)
+            bool verifyCertificate = ca->verifyCertificate(toVerify[i]->getCertificate());
+            if (!verify || !verifyCertificate)
                 return false;
             else
                 countVerified++;

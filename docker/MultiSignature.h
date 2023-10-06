@@ -4,6 +4,7 @@
 #include <map>
 
 #include "Operator.h"
+#include "CertificateAuthority.h"
 
 #include <libcryptosec/ByteArray.h>
 
@@ -42,11 +43,12 @@ public:
      * Recebe uma lista de objetos Operators e verifica se todos eles assinaram o documento.
      * @param operators Lista de objetos Operators que serão verificados.
      * @param hash Hash do documento que será verificado.
+     * @param ca Objeto CertificateAuthority que será utilizado para verificar a assinatura dos operadores.
      * @param checkContainsAll Se true, retornará false se a lista fornecida não contiver todos os operadores que assinaram o documento.
      * @return true se todos os operadores fornecidos possuem assinaturas válidas para o documento.
      * @return false se não foi possível verificar a assinatura de algum operador.
      */
-    bool verify(std::vector<Operator *> operators, ByteArray &hash, bool checkContainsAll = false);
+    bool verify(std::vector<Operator *> operators, ByteArray &hash, CertificateAuthority *ca, bool checkContainsAll = true);
 
     /**
      * Gera uma string XML cujo conteúdo representa o objeto MultiSignature.

@@ -93,12 +93,12 @@ int main(int argc, char *argv[])
 	}
 
 	// Verifica se todos os operadores assinaram o documento
-	bool agreementSatisfied = ms.verify(operators, hash, true);
+	bool agreementSatisfied = ms.verify(operators, hash, &authority, true);
 	if (agreementSatisfied)
-		std::cout << "Acordo realizado com sucesso!\n";
+		std::cout << "Acordo realizado com sucesso! Foi possível verificar a assinatura de todos os operadores.\n";
 	else
 	{
-		std::cout << "Não foi possível chegar em um acordo\n";
+		std::cout << "Não foi possível chegar em um acordo. Não foi possível verificar assinaturas de todos os operadores.\n";
 		return 1;
 	}
 
