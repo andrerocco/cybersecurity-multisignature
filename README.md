@@ -66,7 +66,7 @@ cd /home/labsec/challenge/
 Compile o programa:
 
 ```bash
-make
+make all
 ```
 
 Execute o programa:
