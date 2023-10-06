@@ -36,4 +36,4 @@ all: .comp
 
 clean:
 	rm -rf *.o $(NAME)
-
+	rm -rf *.p12 *.xml

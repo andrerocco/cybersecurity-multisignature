@@ -1,75 +1,27 @@
 #include <iostream>
 #include <fstream>
+#include <string>
 
+#include "utils.h"
 #include "Operator.h"
 #include "CertificateAuthority.h"
 #include "MultiSignature.h"
+
 #include <libcryptosec/ByteArray.h>
-
-// Test 2
-#include <openssl/pem.h>
-#include <libcryptosec/Signer.h>
 #include <libcryptosec/MessageDigest.h>
-#include <libcryptosec/Base64.h>
-
-// Teste de geração de certificados e assinatura de arquivos
-/* #include <libcryptosec/Pkcs12Factory.h>
-#include <libcryptosec/PrivateKey.h>
-#include <libcryptosec/Pkcs7SignedDataBuilder.h>
-#include <libcryptosec/Pkcs7Factory.h> */
-
-// Teste de certificate authority
 #include <libcryptosec/certificate/RDNSequence.h>
 
-void generateFile(ByteArray &ba, std::string filename)
+bool getConfirmation(std::string message)
 {
-	// Escreve o conteúdo do ByteArray em um arquivo
-	std::ofstream file(filename.c_str(), std::ios::binary);
-	unsigned char *data = ba.getDataPointer();
-	file.write(reinterpret_cast<char *>(data), ba.size());
-	file.close();
+	std::cout << "> " << message << " (s/n): ";
+	char c;
+	std::cin >> c;
+	return c == 's' || c == 'S';
 }
 
-void generateFile(const std::string &str, std::string filename)
-{
-	// Escreve o conteúdo da string em um arquivo
-	std::ofstream file(filename.c_str(), std::ios::binary);
-	file.write(str.c_str(), str.size());
-	file.close();
-}
-
-// Lê um arquivo e retorna seu conteúdo em um ByteArray
-ByteArray readFileToByteArray(std::string filename)
-{
-	std::ifstream file(filename.c_str(), std::ios::binary);
-	file.seekg(0, std::ios::end);
-	int length = file.tellg();
-	file.seekg(0, std::ios::beg);
-	char *buffer = new char[length];
-	file.read(buffer, length);
-	file.close();
-	ByteArray ba((unsigned char *)buffer, length);
-	delete[] buffer;
-	return ba;
-}
-
-std::string readFileToString(std::string filename)
-{
-	std::ifstream file(filename.c_str(), std::ios::binary);
-	file.seekg(0, std::ios::end);
-	int length = file.tellg();
-	file.seekg(0, std::ios::beg);
-	char *buffer = new char[length];
-	file.read(buffer, length);
-	file.close();
-	std::string str(buffer, length);
-	delete[] buffer;
-	return str;
-}
-
-// Cria o CA
 CertificateAuthority getCertificateAuthorityRDN()
 {
+	// Para fins de simulação, as informações do CA são padrões
 	RDNSequence caRdn;
 	caRdn.addEntry(RDNSequence::COUNTRY, "BR");
 	caRdn.addEntry(RDNSequence::STATE_OR_PROVINCE, "Santa Catarina");
@@ -82,53 +34,91 @@ CertificateAuthority getCertificateAuthorityRDN()
 
 int main(int argc, char *argv[])
 {
-	OpenSSL_add_all_algorithms();
+	if (argc != 2) // Confere se o número de argumentos é válido
+	{
+		std::cerr << "Erro: número de argumentos inválido\n";
+		std::cerr << "Uso: " << argv[0] << " <pdf_file_path>\n";
+		return 1;
+	}
 
-	// Cria o CA
-	CertificateAuthority ca(getCertificateAuthorityRDN());
+	MessageDigest::loadMessageDigestAlgorithms(); // Carrega os algoritmos de hash
 
-	ByteArray pdf = readFileToByteArray("testfile.pdf");
+	// Extrai o caminho do arquivo e tenta abri-lo
+	std::string inputPath = argv[1];
+	ByteArray pdf;
+	try
+	{
+		pdf = readFileToByteArray(inputPath);
+		std::cout << "Arquivo " << inputPath << " aberto com sucesso\n";
+	}
+	catch (std::exception &e)
+	{
+		std::cerr << "Não foi possível abrir o arquivo '" << inputPath << "'\n";
+		std::cerr << "> Erro: " << e.what() << "\n";
+		return 1;
+	}
+
+	// Gera o hash do arquivo
 	MessageDigest md(MessageDigest::SHA256);
 	ByteArray hash = md.doFinal(pdf);
 
-	Operator op1("Teste", &ca);
-	Operator op2("Teste2", &ca);
-	Operator op3("Teste3", &ca);
+	// Cria o CA
+	CertificateAuthority authority(getCertificateAuthorityRDN());
+
+	// Cria alguns operadores de exemplo
+	Operator op1("John Doe", "123456", &authority);
+	Operator op2("Jane Smith", "123456", &authority);
+	Operator op3("Martin Fowler", "123456", &authority);
+	Operator op4("Robert Martin", "123456", &authority);
+	Operator op5("Kent Beck", "123456", &authority);
 
 	std::vector<Operator *> operators;
 	operators.push_back(&op1);
 	operators.push_back(&op2);
 	operators.push_back(&op3);
+	operators.push_back(&op4);
+	operators.push_back(&op5);
 
-	MultiSignature ms(operators, hash);
+	// Cria o objeto MultiSignature inicializando-o com o hash do arquivo
+	MultiSignature ms(hash);
 
-	bool verify = ms.verify(operators, hash);
-	if (verify)
-		std::cout << "Assinaturas válidas." << std::endl;
+	// Para cada um dos operadores, simula a assinatura do documento confirmando com o usuário
+	for (std::size_t i = 0; i < operators.size(); i++)
+	{
+		bool shouldSign = getConfirmation("Assinar com " + operators[i]->getName() + "?");
+		if (shouldSign)
+			ms.addSignature(operators[i]);
+		// Seria possível verificar se o acordo não foi satisfeito aqui, mas para fins de simulação será feito com
+		// o método verify() de MultiSignature
+	}
+
+	// Verifica se todos os operadores assinaram o documento
+	bool agreementSatisfied = ms.verify(operators, hash, true);
+	if (agreementSatisfied)
+		std::cout << "Acordo realizado com sucesso!\n";
 	else
-		std::cout << "Assinaturas inválidas." << std::endl;
+	{
+		std::cout << "Não foi possível chegar em um acordo\n";
+		return 1;
+	}
 
-	std::vector<Operator *> operators2;
-	operators2.push_back(&op1);
-	operators2.push_back(&op2);
+	/*
+	Para simular a recuperação do programa, vamos salvar todos os operadores em um arquivo .p12 e salvar o objeto
+	MultiSignature em um arquivo .xml
+	*/
+	std::cout << "Gravando operadores e assinaturas em arquivos...\n";
 
-	verify = ms.verify(operators2, hash);
-	if (verify)
-		std::cout << "Assinaturas válidas." << std::endl;
-	else
-		std::cout << "Assinaturas inválidas." << std::endl;
+	// Salva os operadores em um arquivo .p12
+	for (std::size_t i = 0; i < operators.size(); i++)
+	{
+		ByteArray *p12 = operators[i]->getPkcs12DerEncoded();
+		generateFile(*p12, "operator_" + getFilename(operators[i]->getName()) + ".p12");
+		delete p12;
+	}
 
-	Operator op4("Teste4", &ca);
-	operators2.push_back(&op4);
-
-	verify = ms.verify(operators2, hash);
-	if (verify)
-		std::cout << "Assinaturas válidas." << std::endl;
-	else
-		std::cout << "Assinaturas inválidas." << std::endl;
-
-	std::string *mulsig = ms.getMulsigFile();
-	std::cout << *mulsig << std::endl;
+	// Salva o objeto MultiSignature em um arquivo .xml
+	std::string xml = ms.getXmlEncoded();
+	generateFile(xml, "signatures.xml");
 
 	return 0;
 }

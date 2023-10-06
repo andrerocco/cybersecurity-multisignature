@@ -1,11 +1,13 @@
-#include "MultiSignature.h"
-
 #include <vector>
-#include <stack>
 
+#include "MultiSignature.h"
 #include <libcryptosec/Signer.h>
 
-MultiSignature::MultiSignature(std::vector<Operator *> operators, ByteArray &hash)
+MultiSignature::MultiSignature(ByteArray &hash) : hash(hash)
+{
+}
+
+MultiSignature::MultiSignature(std::vector<Operator *> operators, ByteArray &hash) : hash(hash)
 {
     for (std::size_t i = 0; i < operators.size(); i++)
     {
@@ -17,87 +19,63 @@ MultiSignature::MultiSignature(std::vector<Operator *> operators, ByteArray &has
     }
 }
 
-MultiSignature::MultiSignature(std::string mulsigFile)
+MultiSignature::MultiSignature(std::string xmlContent)
 {
-    std::stack<std::string> stack;
-    std::string line;
-    std::string name;
-    std::string signature;
+    size_t pos = 0;
 
-    // Separa o conteúdo do arquivo em linhas
-    std::stringstream ss(mulsigFile);
-    while (std::getline(ss, line, '\n'))
+    while ((pos = xmlContent.find("<signer>", pos)) != std::string::npos)
     {
-        // Se a linha for vazia, pula para a próxima
-        if (line.empty())
-            continue;
+        // Verifica se a tag <name> está presente
+        size_t nameStart = xmlContent.find("<name>", pos);
+        if (nameStart == std::string::npos)
+            throw std::runtime_error("Tag <name> não encontrada.");
 
-        // Se a linha for -----BEGIN SIGNER-----, empilha
-        if (line.compare("-----BEGIN SIGNER-----") == 0)
-        {
-            stack.push(line);
-            continue;
-        }
+        nameStart += 6; // Pula <name>
+        size_t nameEnd = xmlContent.find("</name>", nameStart);
+        if (nameEnd == std::string::npos)
+            throw std::runtime_error("Tag de fechamento </name> não encontrada.");
 
-        // Se a linha for -----END SIGNER-----, desempilha
-        if (line.compare("-----END SIGNER-----") == 0)
-        {
-            stack.pop();
-            continue;
-        }
+        // Extrai o conteúdo da tag <name>
+        std::string name = xmlContent.substr(nameStart, nameEnd - nameStart);
 
-        // Se a linha for -----BEGIN NAME-----, empilha
-        if (line.compare("-----BEGIN NAME-----") == 0)
-        {
-            stack.push(line);
-            continue;
-        }
+        // Verifica se a tag <signature> está presente
+        size_t sigStart = xmlContent.find("<signature>", pos);
+        if (sigStart == std::string::npos)
+            throw std::runtime_error("Tag <signature> não encontrada.");
 
-        // Se a linha for -----END NAME-----, desempilha
-        if (line.compare("-----END NAME-----") == 0)
-        {
-            stack.pop();
-            continue;
-        }
+        sigStart += 11; // Pula <signature>
+        size_t sigEnd = xmlContent.find("</signature>", sigStart);
+        if (sigEnd == std::string::npos)
+            throw std::runtime_error("Tag de fechamento </signature> não encontrada.");
 
-        // Se a linha for -----BEGIN SIGNATURE-----, empilha
-        if (line.compare("-----BEGIN SIGNATURE-----") == 0)
-        {
-            stack.push(line);
-            continue;
-        }
+        // Extrai o conteúdo da tag <signature>
+        std::string signature = xmlContent.substr(sigStart, sigEnd - sigStart);
 
-        // Se a linha for -----END SIGNATURE-----, desempilha
-        if (line.compare("-----END SIGNATURE-----") == 0)
-        {
-            stack.pop();
-            continue;
-        }
+        // Insere a assinatura no mapa
+        signatures.insert(std::make_pair(name, Base64::decode(signature)));
 
-        // Se a linha for o nome do operador, armazena
-        if (stack.top().compare("-----BEGIN NAME-----") == 0)
-        {
-            name = line;
-            continue;
-        }
+        // std::cout << "Name: " << name << std::endl;
+        // std::cout << "Signature: " << signature << std::endl;
 
-        // Se a linha for a assinatura do operador, armazena
-        if (stack.top().compare("-----BEGIN SIGNATURE-----") == 0)
-        {
-            signature = line;
-            continue;
-        }
+        // Move a posição para o próximo
+        pos = sigEnd + 12; // Pula </signature>
     }
-
-    // Insere o nome e a assinatura no mapa
-    signatures.insert(std::make_pair(name, Base64::decode(signature)));
 }
 
 MultiSignature::~MultiSignature()
 {
 }
 
-bool MultiSignature::verify(std::vector<Operator *> toVerify, ByteArray &hash)
+void MultiSignature::addSignature(Operator *op)
+{
+    // Assina o hash com a chave privada do operador
+    ByteArray signature = op->sign(hash);
+
+    // Insere a assinatura no mapa
+    signatures.insert(std::make_pair(op->getName(), signature));
+}
+
+bool MultiSignature::verify(std::vector<Operator *> toVerify, ByteArray &hash, bool checkContainsAll)
 {
     std::size_t toVerifyAmount = toVerify.size();
     std::size_t countVerified = 0;
@@ -122,46 +100,44 @@ bool MultiSignature::verify(std::vector<Operator *> toVerify, ByteArray &hash)
     }
 
     // Se a quantidade de assinaturas verificadas for diferente da quantidade de assinaturas no mapa (no caso de faltar
-    // alguma assinatura na lista fornecida), retorna false
-    if (countVerified != signatures.size())
+    // alguma assinatura na lista fornecida), retorna false (a menos que checkContainsAll seja false)
+    if (checkContainsAll && countVerified != signatures.size())
         return false;
 
     return true;
 }
 
-std::string *MultiSignature::getMulsigFile()
+std::string MultiSignature::getXmlEncoded()
 {
     /*
-    Cria um arquivo com a seguinte estrutura:
-    -----BEGIN SIGNER-----
-    -----BEGIN NAME-----
-    Jonh Doe
-    -----END NAME-----
-    -----BEGIN SIGNATURE-----
-    zvIvg0qoutvGG22TAffqB1Hq870bVv1nfSFifoGfBg92D...
-    -----END SIGNATURE-----
-    -----END SIGNER-----
+    Cria uma string no formato XML com a seguinte estrutura:
+    <signer><name>Jonh Doe</name><signature>zvIvg0qoutvGG22TAffqB1Hq870bVv1nfSFifoGfBg92D...</signature></signer>
+    <signer><name>Alice May</name><signature>zvIvg0qoutvGG22TAffqB1Hq870bVv1nfSFifoGfBg92D...</signature></signer>
     */
 
-    std::string *mulsig = new std::string();
+    std::string string;
+    string = "<?xml version=\"1.0\"?>\n";
 
     // Para cada assinatura no mapa
     for (std::map<std::string, ByteArray>::iterator it = signatures.begin(); it != signatures.end(); it++)
     {
-        mulsig->append("-----BEGIN SIGNER-----\n");
+        string += "<signer>";
 
         // Insere o nome do operador
-        mulsig->append("-----BEGIN NAME-----\n");
-        mulsig->append(it->first);
-        mulsig->append("\n-----END NAME-----\n");
+        string += "<name>";
+        string += it->first;
+        string += "</name>";
 
         // Insere a assinatura
-        mulsig->append("-----BEGIN SIGNATURE-----\n");
-        mulsig->append(Base64::encode(it->second));
-        mulsig->append("\n-----END SIGNATURE-----\n");
+        string += "<signature>";
+        string += Base64::encode(it->second);
+        string += "</signature>";
 
-        mulsig->append("-----END SIGNER-----\n\n");
+        string += "</signer>";
+
+        if (it != --signatures.end()) // Se não for a última assinatura, insere linha em branco
+            string += "\n";
     }
 
-    return mulsig;
+    return string;
 }

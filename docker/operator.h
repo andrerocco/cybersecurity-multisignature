@@ -37,9 +37,10 @@ public:
     /**
      * Construtor padrão que gerará um par de chaves RSA de 2048 bits e um certificado para o operador.
      * @param name Nome do operador.
+     * @param password Senha de acesso ao pacote Pkcs12.
      * @param ca Referência para a autoridade certificadora que irá emitir o certificado do operador.
      */
-    Operator(std::string name, CertificateAuthority *ca);
+    Operator(std::string name, std::string password, CertificateAuthority *ca);
 
     /**
      * Construtor que gera o operador a partir um pacote Pkcs12 (contendo a chave privada e o certificado do operador).

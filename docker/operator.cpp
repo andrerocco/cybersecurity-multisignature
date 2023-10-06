@@ -15,7 +15,7 @@
 // PKCS#12
 #include <libcryptosec/Pkcs12Builder.h>
 
-Operator::Operator(std::string name, CertificateAuthority *ca) : name(name), password("123456")
+Operator::Operator(std::string name, std::string password, CertificateAuthority *ca) : name(name), password(password)
 {
     // Gera um par de chaves RSA de 2048 bits
     RSAKeyPair keyPair(2048);
@@ -33,7 +33,7 @@ Operator::Operator(std::string name, CertificateAuthority *ca) : name(name), pas
 
     // Gera o certificado do operador a partir da chave pública
     certificate = ca->issueCertificate(publicKey, subject);
-    std::cout << "Operador " << name << " criado com sucesso." << std::endl; // DEBUG
+    std::cout << "Operador(a) '" << name << "' criado(a) com sucesso." << std::endl; // DEBUG
 };
 
 Operator::Operator(Pkcs12 *pkcs12, std::string password) : password(password)
@@ -52,7 +52,7 @@ Operator::Operator(Pkcs12 *pkcs12, std::string password) : password(password)
     }
 
     name = certificate->getSubject().getEntries(RDNSequence::COMMON_NAME)[0];
-    std::cout << "Operador " << name << " criado com sucesso." << std::endl; // DEBUG
+    std::cout << "Operador(a) '" << name << "' criado(a) com sucesso." << std::endl; // DEBUG
 }
 
 Operator::~Operator()
@@ -64,17 +64,6 @@ ByteArray Operator::sign(ByteArray &hash)
 {
     return Signer::sign(*privateKey, hash, MessageDigest::SHA256);
 }
-
-/* Pkcs7SignedDataBuilder *Operator::generatePkcs7(bool attached)
-{
-    Pkcs7SignedDataBuilder *builder = new Pkcs7SignedDataBuilder(MessageDigest::SHA256, *certificate, *privateKey, attached);
-    return builder;
-}
-
-void Operator::signPkcs7(Pkcs7SignedDataBuilder &builder)
-{
-    // builder.addSigner(MessageDigest::SHA256, *certificate, *privateKey);
-} */
 
 std::string Operator::getName() const
 {
@@ -93,8 +82,10 @@ Certificate *Operator::getCertificate()
 
 ByteArray *Operator::getPkcs12DerEncoded()
 {
+    OpenSSL_add_all_algorithms(); // Carrega os algoritmos de hash para evitar exceção ao chamar as funções de PKCS12 do OpenSSL
+
     Pkcs12Builder builder;
-    builder.setKeyAndCertificate(privateKey, certificate, name); // Alteração aqui
+    builder.setKeyAndCertificate(privateKey, certificate, name);
     Pkcs12 *pkcs12 = builder.doFinal(password);
     return new ByteArray(pkcs12->getDerEncoded());
 }

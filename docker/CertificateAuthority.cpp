@@ -57,7 +57,7 @@ Certificate *CertificateAuthority::issueCertificate(PublicKey *publicKey, RDNSeq
     Certificate *certificate = builder.sign(*privateKey, MessageDigest::SHA256);
     certificateList.push_back(certificate);
 
-    std::cout << "Certificado emitido com sucesso." << std::endl; // DEBUG
+    // std::cout << "Certificado emitido com sucesso." << std::endl; // DEBUG
 
     return certificate;
 }
