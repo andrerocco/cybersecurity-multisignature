@@ -1,80 +1,76 @@
-# [SGC Challenge](https://https://github.com/Araggar/sgc-challenge)
+# Mission: Digital Signature
 
-Hello there!
+[Repositório do desafio](https://https://github.com/Araggar/sgc-challenge)
 
-The campaign for this selection was inspired by the Mission Impossible movies. The character we presented on our banner is called Luther Stickell.
+## Descrição do desafio
 
-"He is a senior intelligence operative and computer specialist employed by the Impossible Mission Force and a close friend to Ethan Hunt who joined his team as a disavowed agent during a mission in 1996 and has since returned in all his following missions."
+Parabéns por ter chegado até esta etapa do processo seletivo do Laboratório de Segurança em Computação. Se você está lendo este texto é porque optou, ou está pensando em optar, pelo desafio em C++. "A sua missão, caso decida aceitá-la", é propor e desenvolver um protocolo de assinaturas múltiplas. Imagine um cenário onde n operadores, precisam decidir sobre o desligamento de uma usina nuclear. Para tanto, faz-se necessário que todos os envolvidos (os n operadores) assinem um documento digital, categorizando um acordo entre as partes. Seu objetivo é implementar uma aplicação simples, para simular este cenário. Cada operador nesse problema conta com um par de chaves RSA de 2048 bits e um certificado digital que o identifica. Você deve cumprir os seguintes objetivos:
 
-But you're in luck, unlike Luther, you have a very possible challenge to meet.
+-   A aplicação deve ser feita utilizando como base o Dockerfile disponibilizado em https://github.com/Araggar/sgc-challenge;
+-   A aplicação deve receber como entrada um documento do tipo PDF;
+-   Todos os operadores devem poder assinar o documento. Você deve definir como armazenará estas assinaturas;
+-   Caso todos os operadores assinem o documento, o sistema deve fomecer o conjunto das assinaturas. Caso contrário é preciso informar que não foi possível entrar em um acordo;
+-   Caso o acordo seja firmado, deve ser possível verificar as assinaturas geradas;
 
-## Docker
+Para este desafio você deve utilizar, obrigatoriamente a linguagem de programação C++ e o wrapper OpenSSL desenvolvido pelo LabSEC, a [libcryptosec](https://github.com/LabSEC/libcryptosec). Qualquer dúvida poderá ser esclarecida via e-mail, ou pessoalmente, mediante um acordo de horários. Além da aplicação, pedimos que o candidato entregue um relatório de até 3 páginas contendo os seguintes tópicos:
 
-For this challenge you will need to be familiar with the basic docker concepts.
+-   Uma explicação de como as múltiplas assinaturas são armazenadas e verificadas;
+-   Uma explicação de como as sua aplicação funcionaria na prática, por exemplo, em que ordem e como os operadores se apresentariam. Tente englobar os conceitos de certificação digital e assinatura digital;
+-   Uma explicação de como se executa a sua aplicação;
 
-Don't worry, we've prepared some links for you to read.
+### Links úteis:
 
-In addition, Let's look at the main commands you need to run a pre-booted environment.
+1. https://araggar.github.io/sgc-challenge/
+2. https://github.com/Araggar/sgc-challenge/
+3. https://github.com/LabSEC/libcryptosec
+4. https://www.openssl.org/source/old/1.0.2/
 
--   [Docker Docs](https://docker-curriculum.com/)
+## Como executar
 
-### Docker Quickstart
+### Pré-requisitos
 
--   Installing Docker (Ubuntu):
+-   Possuir o [Docker](https://www.docker.com/) instalado e configurado na máquina.
 
-    -   `sudo apt update`
-    -   `sudo apt install docker` (you can also install it with: `sudo snap install docker`)
+### Executando o desafio
 
--   Starting Docker:
-    -   `sudo systemctl start docker`
-    -   `sudo systemctl enable docker`
--   Verify installation
+Com o serviço do Docker inicializado, acesse a pasta `docker/` deste repositório com `cd docker/` e execute os passos abaixo.
 
-    -   `docker --version`
-    -   `docker run hello-world`
+1. Caso seja a primeira vez que você está executando, execute os seguintes comandos:
 
--   Running our container for the first time:
-    -   Download the `docker` folder in this repository
-    -   `cd docker/`
-    -   `docker build -t sgc .`
-    -   `docker run --name sgc -ti sgc` or `docker run -ti --name sgc -v ./:/home/labsec/challenge sgc bash`
--   Running the container afterwards:
-    -   `docker start sgc`
-    -   `docker exec -ti sgc /bin/bash`
+```bash
+# Construa a imagem do docker
+docker build -t sgc .
 
-## Libcryptosec
+docker run --name sgc -ti sgc
+# ou (caso queria que o diretório local seja sincronizado com o diretório do container)
+docker run -ti --name sgc -v ./:/home/labsec/challenge sgc bash
+```
 
--   [Libcryptosec Docs](https://labsec.github.io/libcryptosec/)
--   [Source Repository](https://github.com/LabSEC/libcryptosec)
+2. Caso já tenha executado alguma vez, execute os seguintes comandos:
 
-## OpenSSL
+```bash
+# Inicie o container
+docker start sgc
 
--   [OpenSSL Docs](https://www.openssl.org/docs/man1.0.2/)
+docker exec -ti sgc /bin/bash
+```
 
-## Helpful Knowledge & Tools
+Para acessar o diretório contendo o código fonte do desafio, compilar e executar o programa, siga os passos abaixo.
 
--   [Understanding Makefiles](https://www.gnu.org/software/make/manual/html_node/Introduction.html)
--   [GCC Compiling/Linking](https://www3.ntu.edu.sg/home/ehchua/programming/cpp/gcc_make.html)
--   [GDB debugging with examples](https://www.cprogramming.com/gdb.html)
+Acesse o diretório do desafio:
 
-### GDB Cheatsheet
+```bash
+cd /home/labsec/challenge/
+```
 
-<details>
-  <summary>Expand Cheatsheet</summary>
-  
-| GDB Command               | Description                                                                                                     |
-|---------------------------|-----------------------------------------------------------------------------------------------------------------|
-| b[reak] \<function>       | Set a breakpoint at the beginning of function [break]                                                           |
-| b[reak] <file_name:line>  | Set a breakpoint at line number of the current file. [break]                                                    |
-| info b                    | List all breakpoints [info]                                                                                     |
-| delete n                  | Delete breakpoint number n [delete]                                                                             |
-| r[un] [args]              | Start the program being debugged, possibly with command line arguments args. [run]                              |
-| s[tep] [count]            | Single step the next count statments (default is 1). Step into functions. [step]                                |
-| n[ext] [count]            | Single step the next count statments (default is 1). Step over functions. [next]                                |
-| finish                    | Execute the rest of the current function. Step out of the current function. [finish]                            |
-| c[ontinue]                | Continue execution up to the next breakpoint or until termination if no breakpoints are encountered. [continue] |
-| l[ist] [optional_line]    | List next listsize lines. If optional_line is given, list the lines centered around optional_line. [list]       |
-| set listsize n            | Set the number of lines listed by the list command to n [set listsize]                                          |
-| q[uit]                    | quit gdb [quit]                                                                                                 |
-| ^C                        | Stop execution                                                                                                  |
-</details>
+Compile o programa:
+
+```bash
+make
+```
+
+Execute o programa:
+
+```bash
+./challenge.out testfile.pdf
+```

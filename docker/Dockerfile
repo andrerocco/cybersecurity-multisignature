@@ -50,15 +50,10 @@ RUN cd /home/labsec/ \
     && make \
     && make install
 
-# Setup a nice welcoming message :)
-RUN echo '\ncat /opt/README' >> ~/.bashrc
-
 # Creating the challenge directory.
 # Good Luck!
 # docker run -ti --name sgc sgc bash
 # To map the local ./docker/ folder to the container, run:
 # docker run -ti --name sgc -v ./:/home/labsec/challenge sgc bash
 RUN mkdir /home/labsec/challenge
-COPY challenge.cpp /home/labsec/challenge/
-COPY Makefile /home/labsec/challenge/
-COPY README /opt/
+COPY . /home/labsec/challenge/
