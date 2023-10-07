@@ -62,21 +62,6 @@ public:
     ByteArray sign(ByteArray &hash);
 
     /**
-     * Constroi um pacote Pkcs7 e o inicializa com as informações do operador. Método normalmente utilizado para iniciar
-     * a construção de um pacote Pkcs7 para posteriormente ser assinado por outros operadores.
-     * @return Pkcs7SignedDataBuilder
-     * @param attached Se true, o conteúdo do pacote estará contido no mesmo, caso contrário apenas a assinatura do conteúdo estará presente.
-     * @see Pckcs7SignedDataBuilder
-     */
-    // Pkcs7SignedDataBuilder *generatePkcs7(bool attached); // TODO - Remove
-
-    /**
-     * Assina um pacote Pkcs7.
-     * @param builder Endereço do objeto Pkcs7SignedDataBuilder o qual o operador irá assinar.
-     */
-    // void signPkcs7(Pkcs7SignedDataBuilder &builder); // TODO - Remove
-
-    /**
      * @return Nome do operador.
      */
     std::string getName() const;
@@ -95,8 +80,6 @@ public:
      * @return Pacote Pkcs12 gerado a partir da chave privada, certificado e senha do operador.
      */
     ByteArray *getPkcs12DerEncoded();
-
-    PrivateKey *getPrivateKey(); // TODO - Remove
 };
 
 #endif // OPERATOR_H

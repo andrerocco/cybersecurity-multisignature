@@ -89,8 +89,3 @@ ByteArray *Operator::getPkcs12DerEncoded()
     Pkcs12 *pkcs12 = builder.doFinal(password);
     return new ByteArray(pkcs12->getDerEncoded());
 }
-
-PrivateKey *Operator::getPrivateKey()
-{
-    return privateKey;
-}
